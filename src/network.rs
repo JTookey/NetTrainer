@@ -48,7 +48,7 @@ impl TrainingData {
 }
 
 pub struct Network {
-    nn: NeuralNetwork,
+    pub nn: NeuralNetwork,
     output: AIVec, 
 }
 

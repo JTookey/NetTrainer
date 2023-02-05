@@ -2,8 +2,19 @@ use eframe::egui;
 use egui::plot::{Line, Plot, PlotPoint};
 use network::TrainingData;
 
+enum GUI_State {
+    New,
+    Load,
+    Details,
+    Train,
+    Test,
+}
+
 mod network;
 struct Netrainer {
+    // GUI
+    current_state: GUI_State,
+
     // Data
     training_data: network::TrainingData,
     training_error: Vec<[f64; 2]>,
@@ -20,8 +31,57 @@ impl eframe::App for Netrainer {
             .min_height(20.0)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
+                    if ui.button("New").clicked(){
+                        self.current_state = GUI_State::New;
+                    }
+                    if ui.button("Load").clicked(){
+                        self.current_state = GUI_State::Load;
+
+                    } 
+                    if ui.button("Details").clicked(){
+                        self.current_state = GUI_State::Details;
+
+                    } 
                     if ui.button("Train").clicked() {
-                        for i in 0..50000 {
+                        self.current_state = GUI_State::Train;
+
+                    }
+                    if ui.button("Test").clicked(){
+                        self.current_state = GUI_State::Test;
+
+                    } 
+                    if ui.button("Clear").clicked(){
+
+                    }
+                });
+            });
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // Render Panel based on the state of the GUI
+            match self.current_state {
+                GUI_State::New => {
+                    ui.label("Create New AI Network");
+                    ui.separator();
+
+                },
+                GUI_State::Load => {
+                    ui.label("Load AI Network");
+                    ui.separator();
+
+                },
+                GUI_State::Details => {
+                    ui.label("Details about current AI Network");
+                    ui.separator();
+                    ui.label(format!("Inputs: {}", self.network.nn.number_of_inputs()));
+                    ui.label(format!("Layers: {}", self.network.nn.number_of_layers()));
+                    ui.label(format!("Output: {}", self.network.nn.number_of_outputs()));
+                },
+                GUI_State::Train => {
+                    ui.label("Train the current AI Network");
+                    ui.separator();
+
+                    if ui.button("Run Training").clicked() {
+                        for i in 0..10000 {
                             
                             let (input, output) = self.training_data.get(i);
 
@@ -30,15 +90,20 @@ impl eframe::App for Netrainer {
                             }
                         }
                     }
-                    if ui.button("Clear").clicked(){
-                        
-                    }
-                });
-            });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            let line = Line::new(self.training_error.clone());
-            Plot::new("Error Plot").view_aspect(2.0).show(ui, |plot_ui| plot_ui.line(line));
+                    let line = Line::new(self.training_error.clone());
+                    Plot::new("Error Plot")
+                        .view_aspect(2.0)
+                        .show(ui, |plot_ui| 
+                            plot_ui.line(line)
+                        );
+                },
+                GUI_State::Test => {
+                    ui.label("Test AI Network");
+                    ui.separator();
+
+                },
+            }
         });
     }
 
@@ -51,6 +116,7 @@ fn main() {
     let network = network::Network::new();
 
     let gui = Box::new(Netrainer{
+        current_state: GUI_State::Train,
         training_data,
         training_error,
         network,
