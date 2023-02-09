@@ -67,6 +67,7 @@ impl eframe::App for Netrainer {
                 GUI_State::Load => {
                     ui.label("Load AI Network");
                     ui.separator();
+                    
 
                 },
                 GUI_State::Details => {
@@ -75,6 +76,8 @@ impl eframe::App for Netrainer {
                     ui.label(format!("Inputs: {}", self.network.nn.number_of_inputs()));
                     ui.label(format!("Layers: {}", self.network.nn.number_of_layers()));
                     ui.label(format!("Output: {}", self.network.nn.number_of_outputs()));
+                    ui.separator();
+                    ui.label(format!("Input Vec Shape: {:?}", self.network.input.strides()));
                 },
                 GUI_State::Train => {
                     ui.label("Train the current AI Network");
@@ -82,11 +85,13 @@ impl eframe::App for Netrainer {
 
                     if ui.button("Run Training").clicked() {
                         for i in 0..10000 {
-                            
-                            let (input, output) = self.training_data.get(i);
+                            let mut expectation = ai_core::AIVec::zeros(self.network.nn.number_of_outputs());
 
-                            if let Ok(new_error) = self.network.train(&input, &output) {
-                                self.training_error.push([self.training_error.len() as f64, new_error]);
+                            if let Ok(()) = self.training_data.get(i, &mut self.network.input, &mut expectation) {
+                                
+                                if let Ok(new_error) = self.network.train(&expectation) {
+                                    self.training_error.push([self.training_error.len() as f64, new_error]);
+                                }
                             }
                         }
                     }
@@ -102,6 +107,25 @@ impl eframe::App for Netrainer {
                     ui.label("Test AI Network");
                     ui.separator();
 
+                    // Inputs
+                    for i in 0..self.network.nn.number_of_inputs() {
+                        if ui.radio(self.network.input[i] == 1.0, format!("Input {}", i)).clicked() {
+                            self.network.input[i] = 1.0 - self.network.input[i]; 
+                        }
+                    }
+                    ui.separator();
+
+                    // Process Buttons
+                    if ui.button("Process").clicked() {
+                        if let Ok(res) = self.network.process() {
+                        }
+                    }
+                    ui.separator();
+
+                    // Outputs
+                    for i in 0..self.network.nn.number_of_outputs() {
+                        ui.label(format!("Output {}: {}", i, self.network.output[i]));
+                    }
                 },
             }
         });
