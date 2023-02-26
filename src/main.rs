@@ -78,6 +78,29 @@ impl eframe::App for Netrainer {
                     });
 
                     ui.horizontal(|ui| {
+                        if ui.small_button("Add Hidden").clicked() {
+                            self.new_network_template.hidden_layers.push(1);
+                        }
+
+                        if ui.small_button("Remove Hidden").clicked() {
+                            self.new_network_template.hidden_layers.pop();
+                        }
+                    });
+
+                    for hl in self.new_network_template.hidden_layers.iter_mut() {
+                        ui.horizontal(|ui| {
+                            ui.label(format!("Hidden Layer - Size: {}", hl));
+                            if ui.small_button("<").clicked() {
+                                *hl -= 1;
+                                *hl = (*hl).max(1);
+                            };
+                            if ui.small_button(">").clicked() {
+                                *hl += 1;
+                            };
+                        });
+                    }
+
+                    ui.horizontal(|ui| {
                         ui.label(format!("Number of Outputs: {}", self.new_network_template.n_outputs));
                         if ui.small_button("<").clicked() {
                             self.new_network_template.n_outputs -= 1;
@@ -120,19 +143,23 @@ impl eframe::App for Netrainer {
                     ui.separator();
 
                     // Inputs
-                    for i in 0..self.new_training_inputs.len() {
-                        if ui.radio(self.new_training_inputs[i] == 1.0, format!("Input {}", i)).clicked() {
-                            self.new_training_inputs[i] = 1.0 - self.new_training_inputs[i]; 
+                    ui.horizontal(|ui| {
+                        for i in 0..self.new_training_inputs.len() {
+                            if ui.radio(self.new_training_inputs[i] == 1.0, format!("Input {}", i)).clicked() {
+                                self.new_training_inputs[i] = 1.0 - self.new_training_inputs[i]; 
+                            }
                         }
-                    }
+                    });
                     ui.separator();
 
                     // Outputs
-                    for i in 0..self.new_training_outputs.len() {
-                        if ui.radio(self.new_training_outputs[i] == 1.0, format!("Output {}", i)).clicked() {
-                            self.new_training_outputs[i] = 1.0 - self.new_training_outputs[i]; 
+                    ui.horizontal(|ui|{
+                        for i in 0..self.new_training_outputs.len() {
+                            if ui.radio(self.new_training_outputs[i] == 1.0, format!("Output {}", i)).clicked() {
+                                self.new_training_outputs[i] = 1.0 - self.new_training_outputs[i]; 
+                            }
                         }
-                    }
+                    });
                     ui.separator();
 
                     if ui.button("Add Training Set").clicked() {
@@ -168,11 +195,13 @@ impl eframe::App for Netrainer {
                     ui.separator();
 
                     // Inputs
-                    for i in 0..self.network.nn.number_of_inputs() {
-                        if ui.radio(self.network.input[i] == 1.0, format!("Input {}", i)).clicked() {
-                            self.network.input[i] = 1.0 - self.network.input[i]; 
+                    ui.horizontal(|ui| {
+                        for i in 0..self.network.nn.number_of_inputs() {
+                            if ui.radio(self.network.input[i] == 1.0, format!("Input {}", i)).clicked() {
+                                self.network.input[i] = 1.0 - self.network.input[i]; 
+                            }
                         }
-                    }
+                    });
                     ui.separator();
 
                     // Process Buttons
@@ -183,9 +212,11 @@ impl eframe::App for Netrainer {
                     ui.separator();
 
                     // Outputs
-                    for i in 0..self.network.nn.number_of_outputs() {
-                        ui.label(format!("Output {}: {}", i, self.network.output[i]));
-                    }
+                    ui.horizontal(|ui| {
+                        for i in 0..self.network.nn.number_of_outputs() {
+                            ui.label(format!("Output {}: {}", i, self.network.output[i]));
+                        }
+                    });
                 },
             }
         });
